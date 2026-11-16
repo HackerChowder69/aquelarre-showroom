@@ -1,0 +1,357 @@
+### login_admin
+POST /auth/login
+TOKEN:
+BODY:{"correo":"admin@aquelarre.mx","contrasena":"Admin123*"}
+STATUS:200
+RESP:{"ok":true,"data":{"usuario":{"id":1,"nombre":"Administrador Aquelarre","correo":"admin@aquelarre.mx","telefono":null,"rol":"ADMIN","creadoEn":"2026-11-16T01:12:07.004Z"},"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2wiOiJBRE1JTiIsImlhdCI6MTc5NDc5MTUzMSwiZXhwIjoxNzk0ODIwMzMxLCJzdWIiOiIxIn0.2LLlFwTahlMekrLKKOxloIIRtCrFihc3uTU4t7cuCcw"}}
+
+### registro
+POST /auth/registro
+TOKEN:
+BODY:{"nombre":"Ana López","correo":"ana@correo.com","contrasena":"secreta123","telefono":"4921234567"}
+STATUS:201
+RESP:{"ok":true,"data":{"usuario":{"id":2,"nombre":"Ana López","correo":"ana@correo.com","telefono":"4921234567","rol":"CLIENTE","creadoEn":"2026-11-16T01:12:11.669Z"},"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2wiOiJDTElFTlRFIiwiaWF0IjoxNzk0NzkxNTMxLCJleHAiOjE3OTQ4MjAzMzEsInN1YiI6IjIifQ.ulUybFnezfaLCaaMs9LnlXJPS_w_QfGiDjbt-x1JFRs"}}
+
+### registro_duplicado
+POST /auth/registro
+TOKEN:
+BODY:{"nombre":"Ana López","correo":"ana@correo.com","contrasena":"secreta123"}
+STATUS:409
+RESP:{"ok":false,"error":{"codigo":"CONFLICTO","mensaje":"El correo ya está registrado"}}
+
+### registro_invalido
+POST /auth/registro
+TOKEN:
+BODY:{"nombre":"A","correo":"no-es-correo","contrasena":"abc"}
+STATUS:422
+RESP:{"ok":false,"error":{"codigo":"VALIDACION","mensaje":"Los datos enviados no son válidos","detalles":[{"campo":"nombre","mensaje":"El nombre debe tener entre 2 y 100 caracteres"},{"campo":"correo","mensaje":"Correo no válido"},{"campo":"contrasena","mensaje":"La contraseña debe tener al menos 8 caracteres"},{"campo":"contrasena","mensaje":"La contraseña debe incluir al menos un número"}]}}
+
+### login_malo
+POST /auth/login
+TOKEN:
+BODY:{"correo":"ana@correo.com","contrasena":"otra1234"}
+STATUS:401
+RESP:{"ok":false,"error":{"codigo":"NO_AUTENTICADO","mensaje":"Correo o contraseña incorrectos"}}
+
+### perfil
+GET /auth/perfil
+TOKEN:si
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":2,"nombre":"Ana López","correo":"ana@correo.com","telefono":"4921234567","rol":"CLIENTE","creadoEn":"2026-11-16T01:12:11.669Z"}}
+
+### perfil_sin_token
+GET /auth/perfil
+TOKEN:
+BODY:
+STATUS:401
+RESP:{"ok":false,"error":{"codigo":"NO_AUTENTICADO","mensaje":"Se requiere iniciar sesión"}}
+
+### perfil_token_malo
+GET /auth/perfil
+TOKEN:si
+BODY:
+STATUS:401
+RESP:{"ok":false,"error":{"codigo":"NO_AUTENTICADO","mensaje":"Token inválido o expirado"}}
+
+### categorias
+GET /categorias
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":3,"nombre":"Accesorios","slug":"accesorios","descripcion":"Joyería, bolsas y complementos","activa":true,"creadoEn":"2026-11-16T01:12:07.035Z","_count":{"productos":2}},{"id":1,"nombre":"Comida","slug":"comida","descripcion":"Postres, botanas y antojitos de emprendedores locales","activa":true,"creadoEn":"2026-11-16T01:12:07.020Z","_count":{"productos":2}},{"id":2,"nombre":"Ropa","slug":"ropa","descripcion":"Prendas de diseño independiente","activa":true,"creadoEn":"2026-11-16T01:12:07.028Z","_count":{"productos":2}}]}
+
+### categoria_id
+GET /categorias/2
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":2,"nombre":"Ropa","slug":"ropa","descripcion":"Prendas de diseño independiente","activa":true,"creadoEn":"2026-11-16T01:12:07.028Z"}}
+
+### categoria_crear
+POST /categorias
+TOKEN:si
+BODY:{"nombre":"Artesanías","descripcion":"Barro, madera y textiles"}
+STATUS:201
+RESP:{"ok":true,"data":{"id":4,"nombre":"Artesanías","slug":"artesanias","descripcion":"Barro, madera y textiles","activa":true,"creadoEn":"2026-11-16T01:12:12.765Z"}}
+
+### categoria_crear_cliente
+POST /categorias
+TOKEN:si
+BODY:{"nombre":"Velas"}
+STATUS:403
+RESP:{"ok":false,"error":{"codigo":"PROHIBIDO","mensaje":"No tienes permiso para esta acción"}}
+
+### categoria_actualizar
+PUT /categorias/4
+TOKEN:si
+BODY:{"descripcion":"Barro, madera, textiles y velas"}
+STATUS:200
+RESP:{"ok":true,"data":{"id":4,"nombre":"Artesanías","slug":"artesanias","descripcion":"Barro, madera, textiles y velas","activa":true,"creadoEn":"2026-11-16T01:12:12.765Z"}}
+
+### categoria_eliminar_con_productos
+DELETE /categorias/1
+TOKEN:si
+BODY:
+STATUS:409
+RESP:{"ok":false,"error":{"codigo":"CONFLICTO","mensaje":"La categoría tiene 2 producto(s); muévelos o desactívala"}}
+
+### categoria_eliminar
+DELETE /categorias/4
+TOKEN:si
+BODY:
+STATUS:204
+RESP:
+
+### emprendedores
+GET /emprendedores
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":2,"nombreMarca":"Hilo Negro","responsable":"Mariana T.","telefono":null,"instagram":"@hilonegro.mx","activo":true,"creadoEn":"2026-11-16T01:12:07.050Z","_count":{"productos":2}},{"id":1,"nombreMarca":"Luna Bruja Repostería","responsable":"Daniela R.","telefono":null,"instagram":"@lunabruja.zac","activo":true,"creadoEn":"2026-11-16T01:12:07.041Z","_count":{"productos":2}},{"id":3,"nombreMarca":"Plata Salvaje","responsable":"Fernanda G.","telefono":null,"instagram":"@platasalvaje","activo":true,"creadoEn":"2026-11-16T01:12:07.056Z","_count":{"productos":2}}]}
+
+### emprendedor_crear
+POST /emprendedores
+TOKEN:si
+BODY:{"nombreMarca":"Cera Lunar","responsable":"Paola M.","instagram":"@ceralunar"}
+STATUS:201
+RESP:{"ok":true,"data":{"id":4,"nombreMarca":"Cera Lunar","responsable":"Paola M.","telefono":null,"instagram":"@ceralunar","activo":true,"creadoEn":"2026-11-16T01:12:13.342Z"}}
+
+### emprendedor_actualizar
+PUT /emprendedores/4
+TOKEN:si
+BODY:{"telefono":"4929876543"}
+STATUS:200
+RESP:{"ok":true,"data":{"id":4,"nombreMarca":"Cera Lunar","responsable":"Paola M.","telefono":"4929876543","instagram":"@ceralunar","activo":true,"creadoEn":"2026-11-16T01:12:13.342Z"}}
+
+### emprendedor_eliminar
+DELETE /emprendedores/4
+TOKEN:si
+BODY:
+STATUS:204
+RESP:
+
+### productos_filtro
+GET /productos?categoria=accesorios&orden=precio_asc&limite=5
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":5,"categoriaId":3,"emprendedorId":3,"nombre":"Aretes de luna en plata","descripcion":null,"precio":290,"existencias":10,"imagenUrl":null,"activo":true,"destacado":true,"creadoEn":"2026-11-16T01:12:07.071Z","actualizadoEn":"2026-11-16T01:12:07.071Z","categoria":{"id":3,"nombre":"Accesorios","slug":"accesorios"},"emprendedor":{"id":3,"nombreMarca":"Plata Salvaje","instagram":"@platasalvaje"}},{"id":6,"categoriaId":3,"emprendedorId":3,"nombre":"Collar de cuarzo","descripcion":null,"precio":350,"existencias":2,"imagenUrl":null,"activo":true,"destacado":false,"creadoEn":"2026-11-16T01:12:07.071Z","actualizadoEn":"2026-11-16T01:12:07.071Z","categoria":{"id":3,"nombre":"Accesorios","slug":"accesorios"},"emprendedor":{"id":3,"nombreMarca":"Plata Salvaje","instagram":"@platasalvaje"}}],"meta":{"total":2,"pagina":1,"limite":5,"paginas":1}}
+
+### productos_busqueda
+GET /productos?q=blusa
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":3,"categoriaId":2,"emprendedorId":2,"nombre":"Blusa bordada a mano","descripcion":null,"precio":420,"existencias":6,"imagenUrl":null,"activo":true,"destacado":true,"creadoEn":"2026-11-16T01:12:07.071Z","actualizadoEn":"2026-11-16T01:12:07.071Z","categoria":{"id":2,"nombre":"Ropa","slug":"ropa"},"emprendedor":{"id":2,"nombreMarca":"Hilo Negro","instagram":"@hilonegro.mx"}}],"meta":{"total":1,"pagina":1,"limite":12,"paginas":1}}
+
+### productos_query_mala
+GET /productos?limite=500&orden=barato
+TOKEN:
+BODY:
+STATUS:422
+RESP:{"ok":false,"error":{"codigo":"VALIDACION","mensaje":"Los datos enviados no son válidos","detalles":[{"campo":"orden","mensaje":"orden no válido"},{"campo":"limite","mensaje":"limite debe estar entre 1 y 50"}]}}
+
+### producto_id
+GET /productos/3
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":3,"categoriaId":2,"emprendedorId":2,"nombre":"Blusa bordada a mano","descripcion":null,"precio":420,"existencias":6,"imagenUrl":null,"activo":true,"destacado":true,"creadoEn":"2026-11-16T01:12:07.071Z","actualizadoEn":"2026-11-16T01:12:07.071Z","categoria":{"id":2,"nombre":"Ropa","slug":"ropa"},"emprendedor":{"id":2,"nombreMarca":"Hilo Negro","instagram":"@hilonegro.mx"}}}
+
+### producto_no_existe
+GET /productos/999
+TOKEN:
+BODY:
+STATUS:404
+RESP:{"ok":false,"error":{"codigo":"NO_ENCONTRADO","mensaje":"Producto no encontrado"}}
+
+### producto_id_malo
+GET /productos/abc
+TOKEN:
+BODY:
+STATUS:422
+RESP:{"ok":false,"error":{"codigo":"VALIDACION","mensaje":"Los datos enviados no son válidos","detalles":[{"campo":"id","mensaje":"El id debe ser un entero positivo"}]}}
+
+### producto_crear
+POST /productos
+TOKEN:si
+BODY:{"nombre":"Tote bag de bruja","descripcion":"Bolsa de manta serigrafiada","precio":180,"existencias":12,"categoriaId":3,"emprendedorId":2,"imagenUrl":"https://res.cloudinary.com/aquelarre/image/upload/tote.jpg"}
+STATUS:201
+RESP:{"ok":true,"data":{"id":7,"categoriaId":3,"emprendedorId":2,"nombre":"Tote bag de bruja","descripcion":"Bolsa de manta serigrafiada","precio":180,"existencias":12,"imagenUrl":"https://res.cloudinary.com/aquelarre/image/upload/tote.jpg","activo":true,"destacado":false,"creadoEn":"2026-11-16T01:12:14.348Z","actualizadoEn":"2026-11-16T01:12:14.348Z","categoria":{"id":3,"nombre":"Accesorios","slug":"accesorios"},"emprendedor":{"id":2,"nombreMarca":"Hilo Negro","instagram":"@hilonegro.mx"}}}
+
+### producto_crear_invalido
+POST /productos
+TOKEN:si
+BODY:{"nombre":"X","precio":-5,"categoriaId":3}
+STATUS:422
+RESP:{"ok":false,"error":{"codigo":"VALIDACION","mensaje":"Los datos enviados no son válidos","detalles":[{"campo":"nombre","mensaje":"El nombre debe tener entre 2 y 120 caracteres"},{"campo":"precio","mensaje":"El precio debe ser mayor a 0"},{"campo":"emprendedorId","mensaje":"emprendedorId debe ser un entero"}]}}
+
+### producto_crear_cat_inexistente
+POST /productos
+TOKEN:si
+BODY:{"nombre":"Taza","precio":120,"categoriaId":99,"emprendedorId":1}
+STATUS:400
+RESP:{"ok":false,"error":{"codigo":"SOLICITUD_INVALIDA","mensaje":"La categoría indicada no existe"}}
+
+### producto_actualizar
+PUT /productos/7
+TOKEN:si
+BODY:{"precio":199.5,"destacado":true}
+STATUS:200
+RESP:{"ok":true,"data":{"id":7,"categoriaId":3,"emprendedorId":2,"nombre":"Tote bag de bruja","descripcion":"Bolsa de manta serigrafiada","precio":199.5,"existencias":12,"imagenUrl":"https://res.cloudinary.com/aquelarre/image/upload/tote.jpg","activo":true,"destacado":true,"creadoEn":"2026-11-16T01:12:14.348Z","actualizadoEn":"2026-11-16T01:12:14.663Z","categoria":{"id":3,"nombre":"Accesorios","slug":"accesorios"},"emprendedor":{"id":2,"nombreMarca":"Hilo Negro","instagram":"@hilonegro.mx"}}}
+
+### producto_eliminar
+DELETE /productos/7
+TOKEN:si
+BODY:
+STATUS:204
+RESP:
+
+### json_malo
+POST /productos
+TOKEN:si
+BODY:{"nombre": "x",
+STATUS:400
+RESP:{"ok":false,"error":{"codigo":"SOLICITUD_INVALIDA","mensaje":"El cuerpo de la petición no es un JSON válido"}}
+
+### apartado_crear
+POST /apartados
+TOKEN:si
+BODY:{"nombreCliente":"Ana López","telefonoCliente":"4921234567","productos":[{"productoId":1,"cantidad":2},{"productoId":5,"cantidad":1}],"notas":"Paso el sábado en la tarde"}
+STATUS:201
+RESP:{"ok":true,"data":{"id":1,"folio":"AQ-000001","usuarioId":2,"nombreCliente":"Ana López","telefonoCliente":"4921234567","correoCliente":null,"estado":"PENDIENTE","total":460,"notas":"Paso el sábado en la tarde","fechaLimite":"2026-11-19T01:12:15.007Z","creadoEn":"2026-11-16T01:12:15.009Z","actualizadoEn":"2026-11-16T01:12:15.018Z","detalles":[{"cantidad":2,"precioUnitario":85,"subtotal":170,"producto":{"id":1,"nombre":"Galletas de calabaza (6 pzas)","imagenUrl":null}},{"cantidad":1,"precioUnitario":290,"subtotal":290,"producto":{"id":5,"nombre":"Aretes de luna en plata","imagenUrl":null}}]}}
+
+### apartado_invitado
+POST /apartados
+TOKEN:
+BODY:{"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","productos":[{"productoId":3,"cantidad":1}]}
+STATUS:201
+RESP:{"ok":true,"data":{"id":2,"folio":"AQ-000002","usuarioId":null,"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","correoCliente":null,"estado":"PENDIENTE","total":420,"notas":null,"fechaLimite":"2026-11-19T01:12:15.152Z","creadoEn":"2026-11-16T01:12:15.155Z","actualizadoEn":"2026-11-16T01:12:15.164Z","detalles":[{"cantidad":1,"precioUnitario":420,"subtotal":420,"producto":{"id":3,"nombre":"Blusa bordada a mano","imagenUrl":null}}]}}
+
+### apartado_sin_existencias
+POST /apartados
+TOKEN:
+BODY:{"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","productos":[{"productoId":6,"cantidad":5}]}
+STATUS:409
+RESP:{"ok":false,"error":{"codigo":"CONFLICTO","mensaje":"No hay existencias suficientes","detalles":[{"productoId":6,"disponibles":2,"solicitadas":5}]}}
+
+### apartado_invalido
+POST /apartados
+TOKEN:
+BODY:{"nombreCliente":"Luis","telefonoCliente":"123","productos":[]}
+STATUS:422
+RESP:{"ok":false,"error":{"codigo":"VALIDACION","mensaje":"Los datos enviados no son válidos","detalles":[{"campo":"telefonoCliente","mensaje":"El teléfono debe tener 10 dígitos"},{"campo":"productos","mensaje":"Debes apartar entre 1 y 20 productos"}]}}
+
+### mis_apartados
+GET /apartados/mis-apartados
+TOKEN:si
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":1,"folio":"AQ-000001","usuarioId":2,"nombreCliente":"Ana López","telefonoCliente":"4921234567","correoCliente":null,"estado":"PENDIENTE","total":460,"notas":"Paso el sábado en la tarde","fechaLimite":"2026-11-19T01:12:15.007Z","creadoEn":"2026-11-16T01:12:15.009Z","actualizadoEn":"2026-11-16T01:12:15.018Z","detalles":[{"cantidad":2,"precioUnitario":85,"subtotal":170,"producto":{"id":1,"nombre":"Galletas de calabaza (6 pzas)","imagenUrl":null}},{"cantidad":1,"precioUnitario":290,"subtotal":290,"producto":{"id":5,"nombre":"Aretes de luna en plata","imagenUrl":null}}]}]}
+
+### apartado_folio
+GET /apartados/folio/AQ-000002?telefono=4927654321
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":2,"folio":"AQ-000002","usuarioId":null,"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","correoCliente":null,"estado":"PENDIENTE","total":420,"notas":null,"fechaLimite":"2026-11-19T01:12:15.152Z","creadoEn":"2026-11-16T01:12:15.155Z","actualizadoEn":"2026-11-16T01:12:15.164Z","detalles":[{"cantidad":1,"precioUnitario":420,"subtotal":420,"producto":{"id":3,"nombre":"Blusa bordada a mano","imagenUrl":null}}]}}
+
+### apartado_folio_tel_malo
+GET /apartados/folio/AQ-000002?telefono=4920000000
+TOKEN:
+BODY:
+STATUS:404
+RESP:{"ok":false,"error":{"codigo":"NO_ENCONTRADO","mensaje":"Apartado no encontrado"}}
+
+### apartados_admin
+GET /apartados?estado=PENDIENTE
+TOKEN:si
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":2,"folio":"AQ-000002","usuarioId":null,"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","correoCliente":null,"estado":"PENDIENTE","total":420,"notas":null,"fechaLimite":"2026-11-19T01:12:15.152Z","creadoEn":"2026-11-16T01:12:15.155Z","actualizadoEn":"2026-11-16T01:12:15.164Z","detalles":[{"cantidad":1,"precioUnitario":420,"subtotal":420,"producto":{"id":3,"nombre":"Blusa bordada a mano","imagenUrl":null}}],"usuario":null},{"id":1,"folio":"AQ-000001","usuarioId":2,"nombreCliente":"Ana López","telefonoCliente":"4921234567","correoCliente":null,"estado":"PENDIENTE","total":460,"notas":"Paso el sábado en la tarde","fechaLimite":"2026-11-19T01:12:15.007Z","creadoEn":"2026-11-16T01:12:15.009Z","actualizadoEn":"2026-11-16T01:12:15.018Z","detalles":[{"cantidad":2,"precioUnitario":85,"subtotal":170,"producto":{"id":1,"nombre":"Galletas de calabaza (6 pzas)","imagenUrl":null}},{"cantidad":1,"precioUnitario":290,"subtotal":290,"producto":{"id":5,"nombre":"Aretes de luna en plata","imagenUrl":null}}],"usuario":{"id":2,"nombre":"Ana López","correo":"ana@correo.com"}}],"meta":{"total":2,"pagina":1,"limite":20,"paginas":1}}
+
+### apartados_cliente
+GET /apartados
+TOKEN:si
+BODY:
+STATUS:403
+RESP:{"ok":false,"error":{"codigo":"PROHIBIDO","mensaje":"No tienes permiso para esta acción"}}
+
+### apartado_estado_listo
+PATCH /apartados/1/estado
+TOKEN:si
+BODY:{"estado":"LISTO"}
+STATUS:200
+RESP:{"ok":true,"data":{"id":1,"folio":"AQ-000001","usuarioId":2,"nombreCliente":"Ana López","telefonoCliente":"4921234567","correoCliente":null,"estado":"LISTO","total":460,"notas":"Paso el sábado en la tarde","fechaLimite":"2026-11-19T01:12:15.007Z","creadoEn":"2026-11-16T01:12:15.009Z","actualizadoEn":"2026-11-16T01:12:16.168Z","detalles":[{"cantidad":2,"precioUnitario":85,"subtotal":170,"producto":{"id":1,"nombre":"Galletas de calabaza (6 pzas)","imagenUrl":null}},{"cantidad":1,"precioUnitario":290,"subtotal":290,"producto":{"id":5,"nombre":"Aretes de luna en plata","imagenUrl":null}}]}}
+
+### apartado_estado_recogido
+PATCH /apartados/1/estado
+TOKEN:si
+BODY:{"estado":"RECOGIDO"}
+STATUS:200
+RESP:{"ok":true,"data":{"id":1,"folio":"AQ-000001","usuarioId":2,"nombreCliente":"Ana López","telefonoCliente":"4921234567","correoCliente":null,"estado":"RECOGIDO","total":460,"notas":"Paso el sábado en la tarde","fechaLimite":"2026-11-19T01:12:15.007Z","creadoEn":"2026-11-16T01:12:15.009Z","actualizadoEn":"2026-11-16T01:12:16.284Z","detalles":[{"cantidad":2,"precioUnitario":85,"subtotal":170,"producto":{"id":1,"nombre":"Galletas de calabaza (6 pzas)","imagenUrl":null}},{"cantidad":1,"precioUnitario":290,"subtotal":290,"producto":{"id":5,"nombre":"Aretes de luna en plata","imagenUrl":null}}]}}
+
+### apartado_estado_invalido
+PATCH /apartados/1/estado
+TOKEN:si
+BODY:{"estado":"CANCELADO"}
+STATUS:409
+RESP:{"ok":false,"error":{"codigo":"CONFLICTO","mensaje":"No se puede cambiar de RECOGIDO a CANCELADO"}}
+
+### apartado_cancelar
+PATCH /apartados/2/estado
+TOKEN:si
+BODY:{"estado":"CANCELADO"}
+STATUS:200
+RESP:{"ok":true,"data":{"id":2,"folio":"AQ-000002","usuarioId":null,"nombreCliente":"Luis Pérez","telefonoCliente":"4927654321","correoCliente":null,"estado":"CANCELADO","total":420,"notas":null,"fechaLimite":"2026-11-19T01:12:15.152Z","creadoEn":"2026-11-16T01:12:15.155Z","actualizadoEn":"2026-11-16T01:12:16.518Z","detalles":[{"cantidad":1,"precioUnitario":420,"subtotal":420,"producto":{"id":3,"nombre":"Blusa bordada a mano","imagenUrl":null}}]}}
+
+### existencias_regresan
+GET /productos/3
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":3,"categoriaId":2,"emprendedorId":2,"nombre":"Blusa bordada a mano","descripcion":null,"precio":420,"existencias":6,"imagenUrl":null,"activo":true,"destacado":true,"creadoEn":"2026-11-16T01:12:07.071Z","actualizadoEn":"2026-11-16T01:12:16.514Z","categoria":{"id":2,"nombre":"Ropa","slug":"ropa"},"emprendedor":{"id":2,"nombreMarca":"Hilo Negro","instagram":"@hilonegro.mx"}}}
+
+### mensaje_crear
+POST /mensajes
+TOKEN:
+BODY:{"nombre":"Sofía Ruiz","correo":"sofia@correo.com","asunto":"Quiero vender en el bazar","mensaje":"Hola, hago velas artesanales y me gustaría tener un espacio."}
+STATUS:201
+RESP:{"ok":true,"data":{"id":1,"creadoEn":"2026-11-16T01:12:16.791Z"}}
+
+### mensajes_admin
+GET /mensajes?leido=false
+TOKEN:si
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":[{"id":1,"nombre":"Sofía Ruiz","correo":"sofia@correo.com","telefono":null,"asunto":"Quiero vender en el bazar","mensaje":"Hola, hago velas artesanales y me gustaría tener un espacio.","leido":false,"creadoEn":"2026-11-16T01:12:16.791Z"}]}
+
+### mensaje_leido
+PATCH /mensajes/1/leido
+TOKEN:si
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":1,"nombre":"Sofía Ruiz","correo":"sofia@correo.com","telefono":null,"asunto":"Quiero vender en el bazar","mensaje":"Hola, hago velas artesanales y me gustaría tener un espacio.","leido":true,"creadoEn":"2026-11-16T01:12:16.791Z"}}
+
+### local
+GET /local
+TOKEN:
+BODY:
+STATUS:200
+RESP:{"ok":true,"data":{"id":1,"nombre":"Aquelarre Showroom","direccion":"Av. Preparatoria 208, Col. Hidráulica, Zacatecas, Zac.","telefono":null,"correo":null,"instagramUrl":"https://www.instagram.com/aquelarre_showroom/","horarioAtencion":"Martes a domingo de 11:00 a 20:00","diasVigenciaApartado":3,"mapaUrl":null,"actualizadoEn":"2026-11-16T01:12:07.077Z"}}
+
+### local_actualizar
+PUT /local
+TOKEN:si
+BODY:{"telefono":"4921112233","diasVigenciaApartado":4}
+STATUS:200
+RESP:{"ok":true,"data":{"id":1,"nombre":"Aquelarre Showroom","direccion":"Av. Preparatoria 208, Col. Hidráulica, Zacatecas, Zac.","telefono":"4921112233","correo":null,"instagramUrl":"https://www.instagram.com/aquelarre_showroom/","horarioAtencion":"Martes a domingo de 11:00 a 20:00","diasVigenciaApartado":4,"mapaUrl":null,"actualizadoEn":"2026-11-16T01:12:17.552Z"}}
+
+### ruta_inexistente
+GET /ventas
+TOKEN:
+BODY:
+STATUS:404
+RESP:{"ok":false,"error":{"codigo":"RUTA_NO_ENCONTRADA","mensaje":"No existe la ruta GET /api/ventas"}}
+

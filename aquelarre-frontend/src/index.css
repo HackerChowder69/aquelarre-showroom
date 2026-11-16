@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 h-10 text-[13px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-bruja { @apply btn bg-bruja text-white hover:bg-bruja-700; }
+  .btn-carmin { @apply btn bg-carmin text-white hover:bg-carmin-700; }
+  .btn-borde { @apply btn border border-bruja-200 bg-white text-plum hover:bg-bruja-50; }
+  .campo { @apply h-10 w-full rounded-lg border border-bruja-200 bg-white px-3 text-[14px] outline-none focus:border-bruja focus:ring-2 focus:ring-bruja-100; }
+  .etiqueta { @apply mb-1 block text-[12px] font-semibold uppercase tracking-wider text-plum/60; }
+  .tarjeta { @apply rounded-2xl border border-bruja-100 bg-white; }
+}

@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;1,400;1,600&display=block" rel="stylesheet"><script src="diag.js"></script></head><body><script>
+secuencia({ titulo: "Secuencia 3 · El administrador cambia el estado de un apartado", subtitulo: "PATCH /api/apartados/:id/estado  — ruta protegida por rol ADMIN",
+participantes: [
+  { id: "c", nombre: "Administrador", sub: "Panel de administración", tipo: "actor" },
+  { id: "f", nombre: "FrontEnd", sub: "React + Vite" },
+  { id: "m", nombre: "Middlewares", sub: "autenticar · autorizar" },
+  { id: "k", nombre: "Controlador", sub: "apartados.controller" },
+  { id: "s", nombre: "Servicio", sub: "apartados.service" },
+  { id: "d", nombre: "PostgreSQL", sub: "vía Prisma ORM", tipo: "db" },
+],
+pasos: [
+  { de: "c", a: "f", texto: "Marca el apartado como «Cancelado»", num: 1 },
+  { de: "f", a: "m", texto: ["PATCH /api/apartados/2/estado", "Bearer <token> · { estado: CANCELADO }"], num: 2 },
+  { marco: "alt", ramas: [
+    { guarda: "sin token o token expirado", pasos: [ { de: "m", a: "f", tipo: "res", texto: "401 NO_AUTENTICADO", color: "#C62828" } ] },
+    { guarda: "token válido pero rol CLIENTE", pasos: [ { de: "m", a: "f", tipo: "res", texto: "403 PROHIBIDO", color: "#C62828" } ] },
+    { guarda: "rol ADMIN", pasos: [
+      { de: "m", a: "m", tipo: "self", texto: "idParam + cambiarEstadoRules + validar" },
+      { de: "m", a: "k", texto: "apartados.cambiarEstado(req, res)", num: 3 },
+      { de: "k", a: "s", texto: "cambiarEstado(2, CANCELADO)", num: 4 },
+      { de: "s", a: "d", texto: "BEGIN · SELECT apartado + detalles WHERE id = 2" },
+      { de: "d", a: "s", tipo: "res", texto: "apartado (estado PENDIENTE)" },
+      { marco: "alt", ramas: [
+        { guarda: "no existe", pasos: [ { de: "s", a: "f", tipo: "res", texto: "404 NO_ENCONTRADO", color: "#C62828" } ] },
+        { guarda: "transición no permitida (RECOGIDO → CANCELADO)", pasos: [ { de: "s", a: "f", tipo: "res", texto: "409 CONFLICTO", color: "#C62828" } ] },
+        { guarda: "transición válida", pasos: [
+          { de: "s", a: "d", texto: "UPDATE productos SET existencias = existencias + cantidad", num: 5 },
+          { de: "s", a: "d", texto: "UPDATE apartados SET estado = CANCELADO · COMMIT", num: 6 },
+          { de: "d", a: "s", tipo: "res", texto: "apartado actualizado" },
+          { de: "k", a: "f", tipo: "res", texto: "200 { ok: true, data: apartado }", color: "#2E7D32" },
+        ] },
+      ] },
+    ] },
+  ] },
+  { de: "f", a: "c", tipo: "res", texto: "Actualiza la tabla de apartados" },
+] });
+</script></body></html>

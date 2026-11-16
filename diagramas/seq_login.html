@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;1,400;1,600&display=block" rel="stylesheet"><script src="diag.js"></script></head><body><script>
+secuencia({ titulo: "Secuencia 1 · Inicio de sesión y consulta protegida", subtitulo: "POST /api/auth/login  →  GET /api/auth/perfil",
+participantes: [
+  { id: "c", nombre: "Cliente", sub: "Navegador web", tipo: "actor" },
+  { id: "f", nombre: "FrontEnd", sub: "React + Vite" },
+  { id: "m", nombre: "Middlewares", sub: "rate limit · JWT · validar" },
+  { id: "k", nombre: "Controlador", sub: "auth.controller" },
+  { id: "s", nombre: "Servicio", sub: "auth.service" },
+  { id: "d", nombre: "PostgreSQL", sub: "vía Prisma ORM", tipo: "db" },
+],
+pasos: [
+  { de: "c", a: "f", texto: "Captura correo y contraseña", num: 1 },
+  { de: "f", a: "m", texto: ["POST /api/auth/login", "{ correo, contrasena }"], num: 2 },
+  { de: "m", a: "m", tipo: "self", texto: ["rate limit (10 / 15 min)", "loginRules + validar"] },
+  { marco: "alt", ramas: [
+    { guarda: "datos con formato inválido", pasos: [ { de: "m", a: "f", tipo: "res", texto: "422 VALIDACION + detalles por campo", color: "#C62828" } ] },
+    { guarda: "datos válidos", pasos: [
+      { de: "m", a: "k", texto: "auth.login(req, res)", num: 3 },
+      { de: "k", a: "s", texto: "login(correo, contrasena)", num: 4 },
+      { de: "s", a: "d", texto: "SELECT usuario WHERE correo = $1", num: 5 },
+      { de: "d", a: "s", tipo: "res", texto: "usuario | null" },
+      { de: "s", a: "s", tipo: "self", texto: ["bcrypt.compare(contrasena, hash)", "jwt.sign({ rol }, sub = id, 8h)"] },
+      { marco: "alt", ramas: [
+        { guarda: "credenciales incorrectas", pasos: [ { de: "s", a: "f", tipo: "res", texto: "401 NO_AUTENTICADO (ApiError → manejadorErrores)", color: "#C62828" } ] },
+        { guarda: "credenciales correctas", pasos: [ { de: "s", a: "k", tipo: "res", texto: "{ usuario, token }" }, { de: "k", a: "f", tipo: "res", texto: "200 { ok: true, data: { usuario, token } }", color: "#2E7D32" } ] },
+      ] },
+    ] },
+  ] },
+  { de: "f", a: "f", tipo: "self", texto: "Guarda el token de sesión" },
+  { de: "f", a: "m", texto: ["GET /api/auth/perfil", "Authorization: Bearer <token>"], num: 6 },
+  { de: "m", a: "m", tipo: "self", texto: "autenticar: jwt.verify(token) → req.usuario" },
+  { de: "m", a: "k", texto: "auth.perfil(req, res)", num: 7 },
+  { de: "k", a: "s", texto: "perfil(req.usuario.id)" },
+  { de: "s", a: "d", texto: "SELECT id, nombre, correo, rol ..." },
+  { de: "d", a: "s", tipo: "res", texto: "usuario" },
+  { de: "k", a: "f", tipo: "res", texto: "200 { ok: true, data: usuario }", color: "#2E7D32" },
+  { de: "f", a: "c", tipo: "res", texto: "Muestra «Mi cuenta»" },
+] });
+</script></body></html>

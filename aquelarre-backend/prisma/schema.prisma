@@ -1,0 +1,148 @@
+// Esquema de la base de datos aquelarre_db (PostgreSQL 16) — 8 tablas
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RolUsuario {
+  CLIENTE
+  ADMIN
+
+  @@map("rol_usuario")
+}
+
+enum EstadoApartado {
+  PENDIENTE
+  LISTO
+  RECOGIDO
+  CANCELADO
+  EXPIRADO
+
+  @@map("estado_apartado")
+}
+
+model Usuario {
+  id             Int        @id @default(autoincrement())
+  nombre         String     @db.VarChar(100)
+  correo         String     @unique @db.VarChar(120)
+  contrasenaHash String     @map("contrasena_hash") @db.VarChar(255)
+  telefono       String?    @db.VarChar(15)
+  rol            RolUsuario @default(CLIENTE)
+  activo         Boolean    @default(true)
+  creadoEn       DateTime   @default(now()) @map("creado_en")
+  actualizadoEn  DateTime   @updatedAt @map("actualizado_en")
+  apartados      Apartado[]
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique @db.VarChar(60)
+  slug        String     @unique @db.VarChar(70)
+  descripcion String?    @db.VarChar(255)
+  activa      Boolean    @default(true)
+  creadoEn    DateTime   @default(now()) @map("creado_en")
+  productos   Producto[]
+
+  @@map("categorias")
+}
+
+model Emprendedor {
+  id          Int        @id @default(autoincrement())
+  nombreMarca String     @unique @map("nombre_marca") @db.VarChar(100)
+  responsable String?    @db.VarChar(100)
+  telefono    String?    @db.VarChar(15)
+  instagram   String?    @db.VarChar(60)
+  activo      Boolean    @default(true)
+  creadoEn    DateTime   @default(now()) @map("creado_en")
+  productos   Producto[]
+
+  @@map("emprendedores")
+}
+
+model Producto {
+  id            Int               @id @default(autoincrement())
+  categoriaId   Int               @map("categoria_id")
+  emprendedorId Int               @map("emprendedor_id")
+  nombre        String            @db.VarChar(120)
+  descripcion   String?
+  precio        Decimal           @db.Decimal(10, 2)
+  existencias   Int               @default(0)
+  imagenUrl     String?           @map("imagen_url") @db.VarChar(500)
+  activo        Boolean           @default(true)
+  destacado     Boolean           @default(false)
+  creadoEn      DateTime          @default(now()) @map("creado_en")
+  actualizadoEn DateTime          @updatedAt @map("actualizado_en")
+  categoria     Categoria         @relation(fields: [categoriaId], references: [id])
+  emprendedor   Emprendedor       @relation(fields: [emprendedorId], references: [id])
+  detalles      DetalleApartado[]
+
+  @@index([categoriaId])
+  @@map("productos")
+}
+
+model Apartado {
+  id              Int               @id @default(autoincrement())
+  folio           String            @unique @db.VarChar(12)
+  usuarioId       Int?              @map("usuario_id")
+  nombreCliente   String            @map("nombre_cliente") @db.VarChar(100)
+  telefonoCliente String            @map("telefono_cliente") @db.VarChar(15)
+  correoCliente   String?           @map("correo_cliente") @db.VarChar(120)
+  estado          EstadoApartado    @default(PENDIENTE)
+  total           Decimal           @db.Decimal(10, 2)
+  notas           String?           @db.VarChar(255)
+  fechaLimite     DateTime          @map("fecha_limite")
+  creadoEn        DateTime          @default(now()) @map("creado_en")
+  actualizadoEn   DateTime          @updatedAt @map("actualizado_en")
+  usuario         Usuario?          @relation(fields: [usuarioId], references: [id])
+  detalles        DetalleApartado[]
+
+  @@index([estado])
+  @@map("apartados")
+}
+
+model DetalleApartado {
+  id             Int      @id @default(autoincrement())
+  apartadoId     Int      @map("apartado_id")
+  productoId     Int      @map("producto_id")
+  cantidad       Int
+  precioUnitario Decimal  @map("precio_unitario") @db.Decimal(10, 2)
+  subtotal       Decimal  @db.Decimal(10, 2)
+  apartado       Apartado @relation(fields: [apartadoId], references: [id], onDelete: Cascade)
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@map("detalle_apartado")
+}
+
+model InformacionLocal {
+  id                   Int      @id @db.SmallInt
+  nombre               String   @db.VarChar(100)
+  direccion            String   @db.VarChar(200)
+  telefono             String?  @db.VarChar(15)
+  correo               String?  @db.VarChar(120)
+  instagramUrl         String?  @map("instagram_url") @db.VarChar(200)
+  horarioAtencion      String   @map("horario_atencion") @db.VarChar(150)
+  diasVigenciaApartado Int      @default(3) @map("dias_vigencia_apartado") @db.SmallInt
+  mapaUrl              String?  @map("mapa_url") @db.VarChar(500)
+  actualizadoEn        DateTime @updatedAt @map("actualizado_en")
+
+  @@map("informacion_local")
+}
+
+model MensajeContacto {
+  id       Int      @id @default(autoincrement())
+  nombre   String   @db.VarChar(100)
+  correo   String   @db.VarChar(120)
+  telefono String?  @db.VarChar(15)
+  asunto   String   @db.VarChar(120)
+  mensaje  String
+  leido    Boolean  @default(false)
+  creadoEn DateTime @default(now()) @map("creado_en")
+
+  @@map("mensajes_contacto")
+}

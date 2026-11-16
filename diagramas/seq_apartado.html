@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;1,400;1,600&display=block" rel="stylesheet"><script src="diag.js"></script></head><body><script>
+secuencia({ titulo: "Secuencia 2 · Creación de un apartado (carrito → folio)", subtitulo: "POST /api/apartados  — transacción con control de existencias",
+participantes: [
+  { id: "c", nombre: "Cliente", sub: "Navegador web", tipo: "actor" },
+  { id: "f", nombre: "FrontEnd", sub: "React + Vite" },
+  { id: "m", nombre: "Middlewares", sub: "JWT opcional · validar" },
+  { id: "k", nombre: "Controlador", sub: "apartados.controller" },
+  { id: "s", nombre: "Servicio", sub: "apartados.service" },
+  { id: "d", nombre: "PostgreSQL", sub: "vía Prisma ORM", tipo: "db" },
+],
+pasos: [
+  { de: "c", a: "f", texto: "Confirma el carrito (nombre, teléfono)", num: 1 },
+  { de: "f", a: "m", texto: ["POST /api/apartados  [Bearer opcional]", "{ nombreCliente, telefonoCliente, productos[] }"], num: 2 },
+  { de: "m", a: "m", tipo: "self", texto: ["autenticacionOpcional → req.usuario?", "crearApartadoRules + validar"] },
+  { marco: "alt", ramas: [
+    { guarda: "cuerpo inválido", pasos: [ { de: "m", a: "f", tipo: "res", texto: "422 VALIDACION (teléfono, productos, cantidad...)", color: "#C62828" } ] },
+    { guarda: "cuerpo válido", pasos: [
+      { de: "m", a: "k", texto: "apartados.crear(req, res)", num: 3 },
+      { de: "k", a: "s", texto: "crear(datos, req.usuario?.id)", num: 4 },
+      { de: "s", a: "d", texto: "BEGIN · SELECT productos WHERE id IN (...) AND activo", num: 5 },
+      { de: "d", a: "s", tipo: "res", texto: "productos[]" },
+      { marco: "loop", ramas: [ { guarda: "por cada producto", pasos: [
+        { de: "s", a: "d", texto: ["UPDATE productos SET existencias = existencias - n", "WHERE id = $1 AND existencias >= n"] },
+        { de: "d", a: "s", tipo: "res", texto: "filas afectadas (0 = sin existencias)" },
+      ] } ] },
+      { marco: "alt", ramas: [
+        { guarda: "falta existencia o producto inactivo", pasos: [
+          { de: "s", a: "d", texto: "ROLLBACK" },
+          { de: "s", a: "f", tipo: "res", texto: "409 CONFLICTO / 400 SOLICITUD_INVALIDA", color: "#C62828" } ] },
+        { guarda: "todo disponible", pasos: [
+          { de: "s", a: "s", tipo: "self", texto: ["calcula subtotales y total", "fechaLimite = hoy + dias_vigencia"] },
+          { de: "s", a: "d", texto: "INSERT apartados + detalle_apartado", num: 6 },
+          { de: "s", a: "d", texto: "UPDATE folio = AQ-000001 · COMMIT", num: 7 },
+          { de: "d", a: "s", tipo: "res", texto: "apartado con detalles" },
+          { de: "s", a: "k", tipo: "res", texto: "apartado" },
+          { de: "k", a: "f", tipo: "res", texto: "201 { ok: true, data: { folio, total, fechaLimite, detalles } }", color: "#2E7D32" },
+        ] },
+      ] },
+    ] },
+  ] },
+  { de: "f", a: "c", tipo: "res", texto: "Pantalla de confirmación con folio" },
+] });
+</script></body></html>
